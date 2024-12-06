@@ -2,8 +2,9 @@ use std::collections::HashSet;
 
 use aoc_runner_derive::aoc;
 
-type Input<'a> = (usize, usize, usize, usize, &'a [u8]);
-const DIRECTIONS: [(isize, isize); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+type Input = (usize, usize, usize, usize, Vec<u8>);
+type InputRef<'a> = (usize, usize, usize, usize, &'a [u8]);
+const DIRECTIONS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
 
 pub fn parse(input: &str) -> Input {
     let width = input.lines().next().unwrap().len() + 1;
@@ -23,32 +24,31 @@ pub fn parse(input: &str) -> Input {
         b'<' => 3,
         _ => unreachable!(),
     };
+    let mut input = input.to_vec();
+    input[gi] = b'.';
     (width, height, gi, gd, input)
 }
 
-fn idx(width: usize, x: isize, y: isize) -> usize {
+#[inline]
+fn idx(width: usize, x: i32, y: i32) -> usize {
     if x < 0 || y < 0 {
         return usize::MAX;
     }
     x as usize + y as usize * width
 }
 
-fn guard_run(input: &Input) -> HashSet<(isize, isize)> {
-    let (width, height, gi, mut gd, input) = input;
+fn guard_run(input: &InputRef) -> HashSet<(i32, i32)> {
+    let &(ref width, _, gi, mut gd, input) = input;
     let mut visited = HashSet::new();
-    let mut x = (gi % width) as isize;
-    let mut y = (gi / width) as isize;
+    let mut x = (gi % width) as i32;
+    let mut y = (gi / width) as i32;
 
     loop {
         let dir = DIRECTIONS[gd];
-        while x + dir.0 >= 0
-            && x + dir.0 < (*width as isize - 1)
-            && y + dir.1 >= 0
-            && y + dir.1 < *height as isize
-            && (input[idx(*width, x + dir.0, y + dir.1)] == b'.'
-                || idx(*width, x + dir.0, y + dir.1) == *gi)
+        while input
+            .get(idx(*width, x + dir.0, y + dir.1))
+            .is_some_and(|&c| c == b'.')
         {
-            let dir = DIRECTIONS[gd];
             visited.insert((x, y));
             x += dir.0;
             y += dir.1;
@@ -70,21 +70,18 @@ fn guard_run(input: &Input) -> HashSet<(isize, isize)> {
     visited
 }
 
-fn guard_loop(input: &Input) -> bool {
-    let (width, height, gi, gd, input) = input;
+fn guard_loop(input: &InputRef) -> bool {
+    let (width, _, gi, gd, input) = input;
     #[derive(PartialEq, Eq, Clone, Copy)]
-    struct State(isize, isize, usize);
+    struct State(i32, i32, usize);
 
     let step = |state: &mut State| -> bool {
         let dir = DIRECTIONS[state.2];
-        while state.0 + dir.0 >= 0
-            && state.0 + dir.0 < (*width as isize - 1)
-            && state.1 + dir.1 >= 0
-            && state.1 + dir.1 < *height as isize
-            && (input[idx(*width, state.0 + dir.0, state.1 + dir.1)] == b'.'
-                || idx(*width, state.0 + dir.0, state.1 + dir.1) == *gi)
+
+        while input
+            .get(idx(*width, state.0 + dir.0, state.1 + dir.1))
+            .is_some_and(|&c| c == b'.')
         {
-            let dir = DIRECTIONS[state.2];
             state.0 += dir.0;
             state.1 += dir.1;
         }
@@ -103,7 +100,7 @@ fn guard_loop(input: &Input) -> bool {
         false
     };
 
-    let mut tortoise = State((gi % width) as isize, (gi / width) as isize, *gd);
+    let mut tortoise = State((gi % width) as i32, (gi / width) as i32, *gd);
     let mut hare = tortoise;
 
     loop {
@@ -123,16 +120,16 @@ fn guard_loop(input: &Input) -> bool {
 #[aoc(day6, part1)]
 pub fn part1(input: &str) -> u32 {
     let input = parse(input);
-    let visited = guard_run(&input);
+    let (width, height, gi, gd, input) = input;
+    let visited = guard_run(&(width, height, gi, gd, &input));
     visited.len() as u32
 }
 
 #[aoc(day6, part2)]
 pub fn part2(input: &str) -> u32 {
     let input = parse(input);
-    let visited = guard_run(&input);
-    let (width, height, gi, gd, input) = input;
-    let mut input = input.to_vec();
+    let (width, height, gi, gd, mut input) = input;
+    let visited = guard_run(&(width, height, gi, gd, &input));
     let mut count = 0;
     let mut old = None;
     for (base_x, base_y) in visited {
@@ -144,7 +141,6 @@ pub fn part2(input: &str) -> u32 {
             input[old] = b'.';
         }
         input[ngi] = b'#';
-        //let (_, l) = guard_run(&(width, height, gi, gd, &input));
         let l = guard_loop(&(width, height, gi, gd, &input));
         if l {
             count += 1;
