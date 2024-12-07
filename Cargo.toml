@@ -6,3 +6,10 @@ edition = "2021"
 [dependencies]
 aoc-runner = "0.3.0"
 aoc-runner-derive = "0.3.0"
+aoc-utils = { git = "https://github.com/silentvoid13/aoc-utils.git" }
+gxhash = "3.4.1"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+#panic = "abort"

@@ -58,6 +58,7 @@
         buildInputs = with pkgs; [openssl cargo-aoc];
         shellPkgs = with pkgs; [
           cargo-aoc
+          cargo-flamegraph
         ];
       in rec {
         defaultPackage = naersk'.buildPackage {
