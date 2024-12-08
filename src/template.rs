@@ -4,6 +4,9 @@ type Input = u32;
 
 #[aoc_generator(dayx)]
 pub fn parse(input: &str) -> Input {
+    let mut res = Vec();
+    for l in input.lines() {
+    }
     0
 }
 
