@@ -1,4 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
+use std::collections::{BTreeSet, BinaryHeap};
 
 type Input = Vec<usize>;
 
@@ -80,7 +81,8 @@ pub fn part2(input: &Input) -> usize {
     let values = input.clone();
     let mut id = 0;
     let mut buckets = vec![vec![]; values.len()];
-    let mut spaces = vec![(0, 0); values.len()];
+    let mut space_qs = BTreeSet::new();
+    let mut spaces = vec![0; values.len()];
 
     // first pass to create buckets
     for ci in 0..values.len() {
@@ -88,7 +90,8 @@ pub fn part2(input: &Input) -> usize {
             buckets[ci].push((id, values[ci]));
             id += 1;
         } else if values[ci] != 0 {
-            spaces[ci] = (ci, values[ci]);
+            space_qs.insert((ci, values[ci]));
+            spaces[ci] = values[ci];
         }
     }
 
@@ -100,29 +103,32 @@ pub fn part2(input: &Input) -> usize {
         let (id, mut n) = buckets[ci][0];
         let base_n = n;
 
-        let mut cur_space = 1;
+        let e = space_qs
+            .iter()
+            .take_while(|(sb, _)| *sb < ci)
+            .find(|(_, sp)| *sp >= n);
+        if let Some(&(space_bucket, nspaces)) = e {
+            space_qs.remove(&(space_bucket, nspaces));
+            spaces[space_bucket] = 0;
 
-        while cur_space < spaces.len() && cur_space < ci {
-            let (space_bucket, nspaces) = &mut spaces[cur_space];
-            if *nspaces == 0 || n > *nspaces {
-                cur_space += 2;
-                continue;
+            let new_bucket = &mut buckets[space_bucket];
+            new_bucket.push((id, n.min(nspaces)));
+
+            let new_n = n.saturating_sub(nspaces);
+            let nspaces = nspaces.saturating_sub(n);
+            if nspaces != 0 {
+                space_qs.insert((space_bucket, nspaces));
+                spaces[space_bucket] = nspaces;
             }
-            if *space_bucket > ci {
-                break;
-            }
-
-            let new_bucket = &mut buckets[*space_bucket];
-            new_bucket.push((id, n.min(*nspaces)));
-
-            let new_n = n.saturating_sub(*nspaces);
-            *nspaces = nspaces.saturating_sub(n);
             n = new_n;
 
-            buckets[ci][0].1 = n;
-            spaces[ci] = (ci, base_n - n);
 
-            break;
+            spaces[ci] = base_n - n;
+            if n == 0 {
+                buckets[ci].remove(0);
+            } else {
+                buckets[ci][0].1 = n;
+            }
         }
     }
 
@@ -137,7 +143,7 @@ pub fn part2(input: &Input) -> usize {
             sum += s1;
             i += n;
         }
-        i += spaces[bi].1;
+        i += spaces[bi];
     }
     sum
 }
