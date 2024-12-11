@@ -1,5 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use std::collections::{BTreeSet, BinaryHeap};
+use std::collections::BTreeSet;
 
 type Input = Vec<usize>;
 

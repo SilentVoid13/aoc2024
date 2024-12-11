@@ -1,6 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-type Input = u32;
+type Input = usize;
 
 #[aoc_generator(dayx)]
 pub fn parse(input: &str) -> Input {
@@ -11,12 +11,12 @@ pub fn parse(input: &str) -> Input {
 }
 
 #[aoc(dayx, part1)]
-pub fn part1(input: &Input) -> u32 {
+pub fn part1(input: &Input) -> usize {
     0
 }
 
 #[aoc(dayx, part2)]
-pub fn part2(input: &Input) -> u32 {
+pub fn part2(input: &Input) -> usize {
     0
 }
 
