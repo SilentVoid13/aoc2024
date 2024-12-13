@@ -23,6 +23,7 @@ pub fn part1(input: &Input) -> usize {
         if seen[p] != 0 {
             continue;
         }
+        seen[p] = 1;
         let mut q = VecDeque::new();
         let mut area = 1;
         let mut perim = 0;
@@ -55,6 +56,7 @@ pub fn part2(input: &Input) -> usize {
         if seen[p] != 0 {
             continue;
         }
+        seen[p] = 1;
         let mut q = VecDeque::new();
         let mut area = 1;
         q.push_back((p, c));
