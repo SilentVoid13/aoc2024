@@ -1,11 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use gxhash::{HashMap, HashMapExt, HashSet, HashSetExt};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use aoc_utils::{
-    grid::Grid,
-    point::Point,
-};
+use aoc_utils::{grid::Grid, point::Point};
 use itertools::Itertools;
 
 type Input = (Grid<u8>, HashMap<u8, Vec<Point>>);
