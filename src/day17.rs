@@ -35,69 +35,71 @@ fn combo(v: u8, regs: &[usize]) -> usize {
     }
 }
 
-pub fn run(regs: &mut [usize; 3], instructions: &[(u8, u8)]) -> Vec<u8> {
-    let mut pc = 0;
-    let mut s = Vec::with_capacity(100);
-    while pc < instructions.len() {
-        let (opcode, operand) = instructions[pc];
+pub fn run(pc: &mut usize, regs: &mut [usize; 3], instructions: &[(u8, u8)]) -> Option<u8> {
+    while *pc < instructions.len() {
+        let (opcode, operand) = instructions[*pc];
         match opcode {
             0 => {
                 // a = a / 2^operand
                 let num = regs[A];
                 regs[A] = num >> combo(operand, regs);
-                pc += 1;
+                *pc += 1;
             }
             1 => {
                 // b ^= operand
                 regs[B] ^= operand as usize;
-                pc += 1;
+                *pc += 1;
             }
             2 => {
                 // b = operand % 8
                 regs[B] = combo(operand, regs) & 7;
-                pc += 1;
+                *pc += 1;
             }
             3 => {
                 // if a != 0: jump to operand
                 if regs[A] != 0 {
-                    pc = operand as usize;
+                    *pc = operand as usize;
                 } else {
-                    pc += 1;
+                    *pc += 1;
                 }
             }
             4 => {
                 // b ^= c
                 regs[B] ^= regs[C];
-                pc += 1;
+                *pc += 1;
             }
             5 => {
                 // print operand
                 let r = combo(operand, regs) & 7;
-                s.push(r as u8);
-                pc += 1;
+                *pc += 1;
+                return Some(r as u8);
             }
             6 => {
                 // b = a / 2^operand
                 let num = regs[A];
                 regs[B] = num >> combo(operand, regs);
-                pc += 1;
+                *pc += 1;
             }
             7 => {
                 // c = a / 2^operand
                 let num = regs[A];
                 regs[C] = num >> combo(operand, regs);
-                pc += 1;
+                *pc += 1;
             }
             _ => unimplemented!(),
         }
     }
-    s
+    None
 }
 
 #[aoc(day17, part1)]
 pub fn part1(input: &Input) -> String {
     let mut regs = input.0;
-    let s = run(&mut regs, &input.1);
+    let mut pc = 0;
+    let mut s = Vec::new();
+    while let Some(v) = run(&mut pc, &mut regs, &input.1) {
+        s.push(v);
+    }
     s.iter().join(",")
 }
 
@@ -110,8 +112,8 @@ fn solve(input: &Input, output: &[u8]) -> Vec<usize> {
         for aa in 0..8 {
             let a = (a_cand << 3) + aa;
             let mut regs = [a, 0, 0];
-            let s = run(&mut regs, &input.1);
-            if s[0] == output[0] && !cands.contains(&aa) {
+            let r = run(&mut 0, &mut regs, &input.1).unwrap();
+            if r == output[0] && !cands.contains(&aa) {
                 cands.push(a);
             }
         }
