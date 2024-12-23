@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use aoc_runner_derive::{aoc, aoc_generator};
-use gxhash::{HashMap, HashMapExt};
+use gxhash::{HashMap, HashMapExt, HashSet, HashSetExt};
 use itertools::Itertools;
 
 type Input = (Vec<Vec<usize>>, HashMap<usize, String>);
@@ -56,6 +56,40 @@ pub fn part1(input: &Input) -> usize {
         }
     }
     sum
+}
+
+// Bron-Kerbosch algorithm, not the most efficient
+#[allow(dead_code)]
+fn bron_kerbosch(
+    graph: &Vec<Vec<usize>>,
+    r: HashSet<usize>,
+    mut p: HashSet<usize>,
+    mut x: HashSet<usize>,
+) -> HashSet<usize> {
+    if p.is_empty() && x.is_empty() {
+        return r;
+    }
+    let mut best = HashSet::new();
+    for v in p.clone() {
+        let mut new_r = r.clone();
+        new_r.insert(v);
+        let res = bron_kerbosch(
+            graph,
+            new_r,
+            p.intersection(&graph[v].iter().copied().collect())
+                .cloned()
+                .collect(),
+            x.intersection(&graph[v].iter().copied().collect())
+                .cloned()
+                .collect(),
+        );
+        if res.len() > best.len() {
+            best = res;
+        }
+        p.remove(&v);
+        x.insert(v);
+    }
+    best
 }
 
 #[aoc(day23, part2)]
