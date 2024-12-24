@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use aoc_runner_derive::{aoc, aoc_generator};
 use gxhash::{HashMap, HashMapExt, HashSet, HashSetExt};
 use itertools::Itertools;
@@ -39,19 +37,21 @@ pub fn part1(input: &Input) -> usize {
     let mut seen = vec![false; graph.len()];
     for i in 0..graph.len() {
         seen[i] = true;
-        for ns in graph[i].iter().combinations(2) {
-            let n1 = ns[0];
-            let n2 = ns[1];
-            // if we visited one of the nodes, the clique has already been found
-            if seen[*n1] || seen[*n2] {
-                continue;
-            }
-            if graph[*n1].contains(n2)
-                && (i_name[&i].starts_with("t")
-                    || i_name[n1].starts_with("t")
-                    || i_name[n2].starts_with("t"))
-            {
-                sum += 1;
+        for n1i in 0..graph[i].len() {
+            let n1 = graph[i][n1i];
+            for n2i in n1i + 1..graph[i].len() {
+                let n2 = graph[i][n2i];
+                // if we visited one of the nodes, the clique has already been found
+                if seen[n1] || seen[n2] {
+                    continue;
+                }
+                if graph[n1].contains(&n2)
+                    && (i_name[&i].starts_with("t")
+                        || i_name[&n1].starts_with("t")
+                        || i_name[&n2].starts_with("t"))
+                {
+                    sum += 1;
+                }
             }
         }
     }
@@ -95,31 +95,29 @@ fn bron_kerbosch(
 #[aoc(day23, part2)]
 pub fn part2(input: &Input) -> String {
     let (graph, i_name) = input;
-    let mut best = 0;
-    let mut s_best = String::new();
-    for node in 0..graph.len() {
-        let mut q = VecDeque::new();
-        let mut cur_clique = vec![node];
-        q.push_back(node);
-        while let Some(node) = q.pop_front() {
-            if cur_clique.len() > best {
-                best = cur_clique.len();
-                let mut names = cur_clique.iter().map(|i| i_name[i].as_str()).collect_vec();
-                names.sort();
-                s_best = names.join(",");
-            }
-            'n: for &neigh in &graph[node] {
-                for c in &cur_clique {
-                    if !graph[neigh].contains(c) {
-                        continue 'n;
-                    }
+    let mut best_clique = Vec::new();
+    let mut cur_clique = Vec::new();
+    let mut seen = vec![false; graph.len()];
+    for (n1, neighbours) in graph.iter().enumerate() {
+        if !seen[n1] {
+            cur_clique.clear();
+            cur_clique.push(n1);
+            for &n2 in neighbours {
+                if cur_clique.iter().all(|c| graph[n2].contains(c)) {
+                    cur_clique.push(n2);
+                    // we only need to visit one node from the clique
+                    seen[n2] = true;
                 }
-                cur_clique.push(neigh);
-                q.push_back(neigh);
+            }
+
+            if cur_clique.len() > best_clique.len() {
+                best_clique = cur_clique.clone();
             }
         }
     }
-    s_best
+    let mut names = best_clique.iter().map(|i| i_name[i].as_str()).collect_vec();
+    names.sort();
+    names.join(",")
 }
 
 #[cfg(test)]
