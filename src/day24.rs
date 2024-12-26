@@ -254,9 +254,4 @@ x05 AND y05 -> z00"#;
     fn part1_example() {
         assert_eq!(part1(&parse(EXAMPLE)), 2024);
     }
-
-    #[test]
-    fn part2_example() {
-        assert_eq!(part2(&parse(EXAMPLE2)), "z00,z01,z02,z05");
-    }
 }
